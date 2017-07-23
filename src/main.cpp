@@ -33,13 +33,23 @@ string hasData(string s) {
 }
 
 // Evaluate a polynomial.
-double polyeval(Eigen::VectorXd coeffs, double x) {
+double polyeval(Eigen::VectorXd coeffs, double x, double diff_order) {
   double result = 0.0;
-  for (int i = 0; i < coeffs.size(); i++) {
-    result += coeffs[i] * pow(x, i);
+
+  if (diff_order == 0){
+    for (int i = 0; i < coeffs.size(); i++) {
+      result += coeffs[i] * pow(x, i);
+    }
+  }
+  else if (diff_order == 1){
+    for (int i = 1; i < coeffs.size(); i++) {
+      result += i * coeffs[i] * pow(x, i-1);
+    }
   }
   return result;
 }
+
+
 
 // Fit a polynomial.
 // Adapted from
@@ -92,12 +102,46 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
+          for (int i=0; i<ptsx.size(); ++i){
+              double shift_x = ptsx[i] - px;
+              double shift_y = ptsx[i] - py;
+
+              ptsx[i] = (shift_x * cos(0-psi) - shift_y*sin(0-psi));
+              ptsy[i] = (shift_x * sin(0-psi) + shift_y*cos(0-psi));
+          }
+
+          double* ptrx = &ptsx[0];
+          Eigen::Map<Eigen::VectorXd> ptsx_transform(ptrx, ptsx.size());
+          double* ptry = &ptsy[0];
+          Eigen::Map<Eigen::VectorXd> ptsy_transform(ptry, ptsx.size());
+
+
+          auto coeffs = polyfit(ptsx_transform, ptsy_transform, 3);
           /*
           * TODO: Calculate steering angle and throttle using MPC.
           *
           * Both are in between [-1, 1].
           *
           */
+          // calculate the cross track error
+          double cte = polyeval(coeffs, px, 0) - py;
+          // calculate the orientation error
+          double epsi = psi - std::atan2(polyeval(coeffs, px, 1), 1);
+
+          Eigen::VectorXd state(6);
+          state << 0, 0, 0, v, cte, epsi;
+
+          std::vector<double> x_vals = {state[0]};
+          std::vector<double> y_vals = {state[1]};
+          std::vector<double> psi_vals = {state[2]};
+          std::vector<double> v_vals = {state[3]};
+          std::vector<double> cte_vals = {state[4]};
+          std::vector<double> epsi_vals = {state[5]};
+          std::vector<double> delta_vals = {};
+          std::vector<double> a_vals = {};
+
+          auto vars = mpc.Solve(state, coeffs);
+
           double steer_value;
           double throttle_value;
 
