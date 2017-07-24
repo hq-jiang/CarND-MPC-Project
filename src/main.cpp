@@ -104,16 +104,16 @@ int main() {
 
           for (int i=0; i<ptsx.size(); ++i){
               double shift_x = ptsx[i] - px;
-              double shift_y = ptsx[i] - py;
+              double shift_y = ptsy[i] - py;
 
               ptsx[i] = (shift_x * cos(0-psi) - shift_y*sin(0-psi));
               ptsy[i] = (shift_x * sin(0-psi) + shift_y*cos(0-psi));
           }
 
           double* ptrx = &ptsx[0];
-          Eigen::Map<Eigen::VectorXd> ptsx_transform(ptrx, ptsx.size());
+          Eigen::Map<Eigen::VectorXd> ptsx_transform(ptrx, 6);
           double* ptry = &ptsy[0];
-          Eigen::Map<Eigen::VectorXd> ptsy_transform(ptry, ptsx.size());
+          Eigen::Map<Eigen::VectorXd> ptsy_transform(ptry, 6);
 
 
           auto coeffs = polyfit(ptsx_transform, ptsy_transform, 3);
@@ -124,9 +124,9 @@ int main() {
           *
           */
           // calculate the cross track error
-          double cte = polyeval(coeffs, px, 0) - py;
+          double cte = polyeval(coeffs, 0, 0) - py;
           // calculate the orientation error
-          double epsi = psi - std::atan2(polyeval(coeffs, px, 1), 1);
+          double epsi = 0 - std::atan(polyeval(coeffs, 0, 1));
 
           Eigen::VectorXd state(6);
           state << 0, 0, 0, v, cte, epsi;
@@ -141,9 +141,10 @@ int main() {
           std::vector<double> a_vals = {};
 
           auto vars = mpc.Solve(state, coeffs);
+          std::cout << "vars.size "<< vars.size() << std::endl;
 
-          double steer_value = vars[6]/deg2rad(25);
-          double throttle_value = vars[7];
+          double steer_value = vars[delta_start]/(deg2rad(25)*Lf);
+          double throttle_value = vars[a_start];
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
@@ -155,6 +156,15 @@ int main() {
           vector<double> mpc_x_vals;
           vector<double> mpc_y_vals;
 
+          for (size_t i=x_start; i<x_start+N; ++i){
+            std::cout << "x" << vars[i] << std::endl;
+            mpc_x_vals.push_back(vars[i]);
+          }
+          for (size_t i=y_start; i<y_start+N; ++i){
+            std::cout << "y" << vars[i] << std::endl;
+            mpc_y_vals.push_back(vars[i]);
+          }
+
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
 
@@ -164,6 +174,12 @@ int main() {
           //Display the waypoints/reference line
           vector<double> next_x_vals;
           vector<double> next_y_vals;
+          double poly_inc = 2.5;
+          int num_points = 25;
+          for (int i=1; i < num_points; ++i){
+            next_x_vals.push_back(poly_inc*i);
+            next_y_vals.push_back(polyeval(coeffs, poly_inc*i, 0));
+          }
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
