@@ -141,7 +141,6 @@ int main() {
           std::vector<double> a_vals = {};
 
           auto vars = mpc.Solve(state, coeffs);
-          std::cout << "vars.size "<< vars.size() << std::endl;
 
           double steer_value = vars[delta_start]/(deg2rad(25)*Lf);
           double throttle_value = vars[a_start];
@@ -157,11 +156,9 @@ int main() {
           vector<double> mpc_y_vals;
 
           for (size_t i=x_start; i<x_start+N; ++i){
-            std::cout << "x" << vars[i] << std::endl;
             mpc_x_vals.push_back(vars[i]);
           }
           for (size_t i=y_start; i<y_start+N; ++i){
-            std::cout << "y" << vars[i] << std::endl;
             mpc_y_vals.push_back(vars[i]);
           }
 

@@ -8,7 +8,7 @@ using CppAD::AD;
 size_t N = 10;
 double dt = 0.1;
 
-double ref_v = 50.0;
+double ref_v = 40.0;
 
 
 
@@ -64,7 +64,7 @@ class FG_eval {
       // cte
       fg[0] += 1000*pow(vars[i],2);
       // epsi
-      fg[0] += 10000*pow(vars[i+N],2);
+      fg[0] += 7000*pow(vars[i+N],2);
     }
     // Cost of velocity difference
     for(size_t i=v_start; i<v_start+N; ++i){
