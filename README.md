@@ -62,3 +62,14 @@ freedom in our design. Of course, we want to minimize our cross track error `cte
 There are also two other variables. The timestep `dt` and the number of timesteps
 `N`. Generally we want to look some distance ahead to take curves into account. If
 `dt*N` is to low we end up to something similar to a PID control. If `N` is big we look farther ahead, but if it is to high, we not only have a computational overhead but our polynomial would also fail to fit. Also since we are dealing with latency and inaccuracies, the more we look into the future, the worse our prediction gets. This in consequence has an impact on our current state, which might lead to errors. In my case the car osciallated a lot after increasing `N`, but it might also be due to the simulator not having a fixed reference trajectory.
+
+##### Latency
+At last we want to deal with latency in our control scheme. The advantage of mpc
+is that we can do that quite easily by updating our model with a latency time step
+before feeding it into the solver. The result is our control input in the future,
+after letting the model transitioning one time step without input.
+Since the default latency is only 0.1s it doesn't affect us very much. But after taking latency into account oscillation of the car decreased.
+
+
+##### Future works
+- Increase speed

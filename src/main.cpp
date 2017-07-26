@@ -101,6 +101,8 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
+          double delta = j[1]["steering_angle"];
+          double a = j[1]["throttle"];
 
           for (int i=0; i<ptsx.size(); ++i){
               double shift_x = ptsx[i] - px;
@@ -124,12 +126,21 @@ int main() {
           *
           */
           // calculate the cross track error
-          double cte = polyeval(coeffs, 0, 0) - py;
+          double cte = polyeval(coeffs, 0, 0) - 0;
           // calculate the orientation error
           double epsi = 0 - std::atan(polyeval(coeffs, 0, 1));
 
+          // Account for latency
+          double latency = 0.1;
+          double x_lat = v*latency;//0 + v*cos(0)*latency
+          double y_lat = 0; //0 + v*sin(0)*latency
+          double psi_lat = -v*delta/Lf*latency;
+          double v_lat = v+a*latency;
+          double cte_lat = polyeval(coeffs, 0, 0) - 0 + v*sin(epsi)*latency;
+          double epsi_lat = 0 - std::atan(polyeval(coeffs, 0, 1)) - v/Lf*delta*latency;
+
           Eigen::VectorXd state(6);
-          state << 0, 0, 0, v, cte, epsi;
+          state << x_lat, y_lat, psi_lat, v_lat, cte_lat, epsi_lat;
 
           std::vector<double> x_vals = {state[0]};
           std::vector<double> y_vals = {state[1]};
