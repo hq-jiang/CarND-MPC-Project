@@ -63,6 +63,11 @@ There are also two other variables. The timestep `dt` and the number of timestep
 `N`. Generally we want to look some distance ahead to take curves into account. If
 `dt*N` is to low we end up to something similar to a PID control. If `N` is big we look farther ahead, but if it is to high, we not only have a computational overhead but our polynomial would also fail to fit. Also since we are dealing with latency and inaccuracies, the more we look into the future, the worse our prediction gets. This in consequence has an impact on our current state, which might lead to errors. In my case the car osciallated a lot after increasing `N`, but it might also be due to the simulator not having a fixed reference trajectory.
 
+The result is shown in the udacity simulator. The yellow line is the goal path
+and the green line is the predicted control path:  
+![alt text](./docs/mpc_controller.gif)
+
+
 ##### Latency
 At last we want to deal with latency in our control scheme. The advantage of mpc
 is that we can do that quite easily by updating our model with a latency time step
